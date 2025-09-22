@@ -11,8 +11,13 @@ import adminAccountsHandler from "./routes/admin/accounts.js";
 import adminUpdateHandler from "./routes/admin/update.js";
 import adminOverviewHandler from "./routes/admin/overview.js";
 import adminPartnersHandler from "./routes/admin/partners.js";
+import adminRewardsHandler from "./routes/admin/rewards.js";
 import partnerByIdHandler from "./routes/partner/by-id.js";
 import partnerVisitHandler from "./routes/partner/visit.js";
+import partnerMarkVisitedHandler from "./routes/partner/mark-visited.js";
+import bonusUserPointsHandler from "./routes/bonus/user-points-final.js";
+import bonusRedeemRewardHandler from "./routes/bonus/redeem-reward.js";
+import bonusDebugUserHandler from "./routes/bonus/debug-user.js";
 
 const routes = [
   { method: "POST", pattern: /^register$/, handler: registerHandler },
@@ -63,6 +68,65 @@ const routes = [
     method: "POST",
     pattern: /^partner\/visit$/,
     handler: partnerVisitHandler,
+  },
+  {
+    method: "POST",
+    pattern: /^partner\/mark-visited$/,
+    handler: partnerMarkVisitedHandler,
+  },
+  // Bonus/Rewards endpoints
+  {
+    method: "GET",
+    pattern: /^bonus\/user-points$/,
+    handler: bonusUserPointsHandler,
+  },
+  {
+    method: "POST",
+    pattern: /^bonus\/redeem-reward$/,
+    handler: bonusRedeemRewardHandler,
+  },
+  {
+    method: "GET",
+    pattern: /^bonus\/debug-user$/,
+    handler: bonusDebugUserHandler,
+  },
+  // Admin rewards management
+  {
+    method: "GET",
+    pattern: /^admin\/rewards$/,
+    handler: adminRewardsHandler,
+  },
+  {
+    method: "POST",
+    pattern: /^admin\/rewards$/,
+    handler: adminRewardsHandler,
+  },
+  {
+    method: "GET",
+    pattern: /^admin\/rewards\/([^/]+)$/,
+    handler: adminRewardsHandler,
+    prepare: (req, match) => {
+      if (!req.query) req.query = {};
+      req.query.rewardId = match[1];
+    },
+  },
+  {
+    method: "PUT",
+    pattern: /^admin\/rewards\/([^/]+)$/,
+    handler: adminRewardsHandler,
+    prepare: (req, match) => {
+      if (!req.query) req.query = {};
+      req.query.rewardId = match[1];
+    },
+  },
+  {
+    method: "DELETE",
+    pattern: /^admin\/rewards\/([^/]+)$/,
+    handler: adminRewardsHandler,
+    prepare: (req, match) => {
+      if (!req.query) req.query = {};
+      req.query.rewardId = match[1];
+    },
   },
 ];
 
