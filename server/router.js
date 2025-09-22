@@ -16,8 +16,10 @@ import partnerByIdHandler from "./routes/partner/by-id.js";
 import partnerVisitHandler from "./routes/partner/visit.js";
 import partnerMarkVisitedHandler from "./routes/partner/mark-visited.js";
 import bonusUserPointsHandler from "./routes/bonus/user-points-final.js";
+import bonusUserPointsFixedHandler from "./routes/bonus/user-points-fixed.js";
 import bonusRedeemRewardHandler from "./routes/bonus/redeem-reward.js";
 import bonusDebugUserHandler from "./routes/bonus/debug-user.js";
+import qrRegisterImprovedHandler from "./routes/qr/register-improved.js";
 
 const routes = [
   { method: "POST", pattern: /^register$/, handler: registerHandler },
@@ -81,6 +83,11 @@ const routes = [
     handler: bonusUserPointsHandler,
   },
   {
+    method: "GET",
+    pattern: /^bonus\/user-points-fixed$/,
+    handler: bonusUserPointsFixedHandler,
+  },
+  {
     method: "POST",
     pattern: /^bonus\/redeem-reward$/,
     handler: bonusRedeemRewardHandler,
@@ -89,6 +96,12 @@ const routes = [
     method: "GET",
     pattern: /^bonus\/debug-user$/,
     handler: bonusDebugUserHandler,
+  },
+  // QR Registration endpoints
+  {
+    method: "POST",
+    pattern: /^qr\/register$/,
+    handler: qrRegisterImprovedHandler,
   },
   // Admin rewards management
   {
