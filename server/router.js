@@ -15,6 +15,7 @@ import adminRewardsHandler from "./routes/admin/rewards.js";
 import partnerByIdHandler from "./routes/partner/by-id.js";
 import partnerVisitHandler from "./routes/partner/visit.js";
 import partnerMarkVisitedHandler from "./routes/partner/mark-visited.js";
+import partnerCheckRedemptionHandler from "./routes/partner/check-redemption.js";
 import bonusUserPointsHandler from "./routes/bonus/user-points-final.js";
 import bonusUserPointsFixedHandler from "./routes/bonus/user-points-fixed.js";
 import bonusRedeemRewardHandler from "./routes/bonus/redeem-reward.js";
@@ -75,6 +76,16 @@ const routes = [
     method: "POST",
     pattern: /^partner\/mark-visited$/,
     handler: partnerMarkVisitedHandler,
+  },
+  {
+    method: "GET",
+    pattern: /^partner\/check-redemption$/,
+    handler: partnerCheckRedemptionHandler,
+  },
+  {
+    method: "POST",
+    pattern: /^partner\/check-redemption$/,
+    handler: partnerCheckRedemptionHandler,
   },
   // Bonus/Rewards endpoints
   {

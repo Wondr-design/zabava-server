@@ -1,5 +1,6 @@
-import { kv } from "@vercel/kv";
-import { respond, setCors } from "../../../lib/utils.js";
+import { kv } from '@vercel/kv';
+import { respond, setCors } from '../../../lib/utils.js';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * POST /api/bonus/redeem-reward

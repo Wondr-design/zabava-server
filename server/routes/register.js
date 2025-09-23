@@ -101,7 +101,7 @@ export default async function registerHandler(req, res) {
       hasBody: Boolean(req.body && Object.keys(req.body).length),
     });
 
-    const { email, ...rest } = req.body || {};
+    const { email, redemptionCode, ...rest } = req.body || {};
 
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
@@ -124,6 +124,85 @@ export default async function registerHandler(req, res) {
       visitedAt: "",
     };
 
+    // Handle redemption code if provided
+    let redemptionInfo = null;
+    if (redemptionCode) {
+      const redemptionKey = `redemption:${redemptionCode}`;
+      const redemptionData = await kv.hgetall(redemptionKey);
+      
+      if (redemptionData && redemptionData.email === normalizedEmail) {
+        // Check if redemption is still valid
+        const expiresAt = new Date(redemptionData.expiresAt);
+        const now = new Date();
+        
+        if (expiresAt > now && redemptionData.status === "pending") {
+          // Attach redemption to this booking
+          record.redemptionCode = redemptionCode;
+          record.hasRedemption = "true";
+          record.redemptionReward = redemptionData.rewardName;
+          record.redemptionValue = redemptionData.pointsSpent;
+          
+          // Update redemption status
+          await kv.hset(redemptionKey, "status", "applied");
+          await kv.hset(redemptionKey, "appliedToBooking", key);
+          await kv.hset(redemptionKey, "appliedAt", createdAtIso);
+          await kv.hset(redemptionKey, "partnerId", rest.partner_id || rest.partnerId || "");
+          
+          redemptionInfo = {
+            code: redemptionCode,
+            reward: redemptionData.rewardName,
+            value: redemptionData.pointsSpent,
+            status: "Applied to booking"
+          };
+        } else if (redemptionData.status === "used") {
+          return res.status(400).json({ 
+            error: "Redemption code has already been used",
+            code: redemptionCode 
+          });
+        } else if (expiresAt <= now) {
+          return res.status(400).json({ 
+            error: "Redemption code has expired",
+            code: redemptionCode,
+            expiredAt: expiresAt.toISOString()
+          });
+        }
+      } else if (redemptionData && redemptionData.email !== normalizedEmail) {
+        return res.status(400).json({ 
+          error: "This redemption code belongs to a different user",
+          code: redemptionCode 
+        });
+      } else {
+        return res.status(400).json({ 
+          error: "Invalid redemption code",
+          code: redemptionCode 
+        });
+      }
+    }
+
+    // If user provided a redemption code, validate and attach it
+    if (redemptionCode) {
+      const redemptionKey = `redemption:${redemptionCode}`;
+      const redemptionData = await kv.hgetall(redemptionKey);
+      
+      if (redemptionData && redemptionData.email === normalizedEmail) {
+        // Check if redemption is still valid
+        const expiresAt = new Date(redemptionData.expiresAt);
+        if (expiresAt > new Date() && redemptionData.status === "pending") {
+          record.redemptionCode = redemptionCode;
+          record.redemptionDetails = JSON.stringify({
+            rewardName: redemptionData.rewardName,
+            pointsValue: redemptionData.pointsSpent,
+            redeemedAt: redemptionData.redeemedAt
+          });
+          
+          // Update redemption status to "approved" (being used)
+          await kv.hset(redemptionKey, "status", "approved");
+          await kv.hset(redemptionKey, "usedInBooking", key);
+          await kv.hset(redemptionKey, "usedAt", createdAtIso);
+        }
+      }
+    }
+
     let partnerKey = extractPartnerId(rest);
 
     if (partnerKey) {
@@ -138,7 +217,7 @@ export default async function registerHandler(req, res) {
 
     const baseUrl = process.env.BASE_URL || "https://zabava-server.vercel.app";
 
-    return res.status(200).json({
+    const response = {
       success: true,
       email: normalizedEmail,
       verifyUrl: `${baseUrl}/api/verify?email=${encodeURIComponent(
@@ -146,7 +225,15 @@ export default async function registerHandler(req, res) {
       )}`,
       key,
       message: "Registration successful",
-    });
+    };
+
+    // Include redemption info if a redemption was applied
+    if (redemptionInfo) {
+      response.redemption = redemptionInfo;
+      response.message = "Registration successful with reward redemption applied";
+    }
+
+    return res.status(200).json(response);
   } catch (error) {
     console.error("Simple register error", {
       message: error.message,
